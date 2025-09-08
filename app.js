@@ -4,6 +4,10 @@ const { PrismaClient } = require('./generated/prisma');
 const prisma = new PrismaClient();
 const loggerMiddleware = require('./middlewares/logger');
 const errorHandler = require('./middlewares/errorHandler');
+const authenticateToken = require('./middlewares/auth');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+
 const { validateUser } = require('./utils/validation');
 const bodyParser = require('body-parser');
 
@@ -148,4 +152,41 @@ app.get('/db-users', async (req, res) => {
       .status(500)
       .json({ error: 'Error al comunicarse con la base de datos.' });
   }
+});
+
+app.get('/protected-route', authenticateToken, (req, res) => {
+  res.json({ message: 'Acceso a ruta protegida concedido', user: req.user });
+});
+
+app.post('/register', async (req, res) => {
+  const { email, password, name } = req.body;
+  const hashedPassword = await bcrypt.hash(password, 10);
+
+  const newUser = await prisma.user.create({
+    data: {
+      email,
+      password: hashedPassword,
+      name,
+      role: 'USER'
+    },
+  });
+  res.status(201).json({ message: 'User Registered Successfully' });
+});
+
+app.post('/login', async (req, res) => {
+  const { email, password } = req.body;
+
+  const user = await prisma.user.findUnique({ where: { email } });
+  const isValidPassword = await bcrypt.compare(password, user.password);
+
+  if (!user || !isValidPassword) {
+    return res.status(400).json({ error: 'Invalid email or password' });
+  }
+
+  const token = jwt.sign({ 
+    id: user.id, 
+    role: user.role 
+  }, 
+  process.env.JWT_SECRET);
+  res.json({ token });
 });
