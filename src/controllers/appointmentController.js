@@ -6,6 +6,6 @@ exports.getUserAppointments = async (req, res) => {
     const appointments = await appointmentService.getUserAppointments(userId);
     res.json(appointments);
   } catch (error) {
-    res.status(500).json({ error: 'Error al obtener el historial de citas' });
+    res.status(500).json({ error: error.message });
   }
 };
