@@ -2,45 +2,56 @@ const { PrismaClient } = require('../generated/prisma');
 const prisma = new PrismaClient();
 
 async function main() {
-  const demoUsers = [
-    {
-      name: 'Alice',
-      email: 'alice@example.com',
-      password: 'password1',
-      role: 'ADMIN',
-    },
-    {
-      name: 'Bob',
-      email: 'bob@example.com',
-      password: 'password2',
-      role: 'USER',
-    },
-    {
-      name: 'Charlie',
-      email: 'charlie@example.com',
-      password: 'password3',
-      role: 'USER',
-    },
-    {
-      name: 'Diana',
-      email: 'diana@example.com',
-      password: 'password4',
-      role: 'USER',
-    },
-    {
-      name: 'Eve',
-      email: 'eve@example.com',
-      password: 'password5',
-      role: 'ADMIN',
-    },
-  ];
-
-  await prisma.user.createMany({
-    data: demoUsers,
-    skipDuplicates: true,
+  // Crear usuarios
+  const user1 = await prisma.user.create({
+    data: {
+      email: 'user1@example.com',
+      password: 'password123',
+      name: 'User One',
+      role: 'USER'
+    }
   });
 
-  console.log('Usuarios de demostración creados con éxito');
+  const user2 = await prisma.user.create({
+    data: {
+      email: 'admin@example.com',
+      password: 'admin123',
+      name: 'Admin User',
+      role: 'ADMIN'
+    }
+  });
+
+  // Crear bloques de tiempo
+  const timeBlock1 = await prisma.timeBlock.create({
+    data: {
+      startTime: new Date('2023-10-01T09:00:00Z'),
+      endTime: new Date('2023-10-01T10:00:00Z')
+    }
+  });
+
+  const timeBlock2 = await prisma.timeBlock.create({
+    data: {
+      startTime: new Date('2023-10-01T10:00:00Z'),
+      endTime: new Date('2023-10-01T11:00:00Z')
+    }
+  });
+
+  // Crear citas
+  await prisma.appointment.create({
+    data: {
+      date: new Date('2023-10-01T09:00:00Z'),
+      user: { connect: { id: user1.id } },
+      timeBlock: { connect: { id: timeBlock1.id } }
+    }
+  });
+
+  await prisma.appointment.create({
+    data: {
+      date: new Date('2023-10-01T10:00:00Z'),
+      user: { connect: { id: user2.id } },
+      timeBlock: { connect: { id: timeBlock2.id } }
+    }
+  });
 }
 
 main()
