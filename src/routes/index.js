@@ -10,6 +10,7 @@ const router = Router();
 router.use('/auth', authRouter);
 router.use('/admin', authenticateToken, adminRouter);
 router.use('/reservations', authenticateToken, reservations);
+router.use('/appointments', authenticateToken, appointments);
 router.use('/users', authenticateToken, usersRouter);
 
 module.exports = router;
